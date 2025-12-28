@@ -29,11 +29,8 @@ class HoldedClient:
         self.api_key = api_key or settings.holded_api_key
         self.base_url = settings.holded_api_base_url
 
-        if not self.api_key:
-            raise ValueError("Holded API key is required")
-
         self.headers = {
-            "key": self.api_key,
+            "key": self.api_key or "",
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
@@ -64,6 +61,9 @@ class HoldedClient:
         Raises:
             httpx.HTTPError: If request fails
         """
+        if not self.api_key:
+            raise ValueError("Holded API key is required to make requests")
+
         url = f"{self.base_url}{endpoint}"
 
         async with httpx.AsyncClient(timeout=30.0) as client:

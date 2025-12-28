@@ -2,7 +2,7 @@
 Unit tests for Holded MCP tools.
 """
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 
 from app.mcp.tools.holded_tools import HoldedTools
 from app.domain.entities.invoice import Invoice, InvoiceItem
@@ -11,8 +11,17 @@ from app.domain.entities.product import Product
 
 
 @pytest.fixture
-def holded_tools():
-    """Create HoldedTools instance."""
+def mock_settings():
+    """Mock settings for Holded API."""
+    with patch('app.infrastructure.connectors.holded.client.settings') as mock:
+        mock.holded_api_key = "test_api_key"
+        mock.holded_api_base_url = "https://api.holded.com"
+        yield mock
+
+
+@pytest.fixture
+def holded_tools(mock_settings):
+    """Create HoldedTools instance with mocked client."""
     return HoldedTools()
 
 
