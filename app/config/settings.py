@@ -65,6 +65,16 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
+    # Holded API
+    holded_api_key: Optional[str] = Field(
+        default=None,
+        description="Holded API key for authentication"
+    )
+    holded_api_base_url: str = Field(
+        default="https://api.holded.com",
+        description="Holded API base URL"
+    )
+
 
 # Global settings instance
 settings = Settings()
