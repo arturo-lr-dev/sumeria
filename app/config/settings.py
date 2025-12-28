@@ -75,6 +75,16 @@ class Settings(BaseSettings):
         description="Holded API base URL"
     )
 
+    # Notion API
+    notion_api_key: Optional[str] = Field(
+        default=None,
+        description="Notion API key for authentication"
+    )
+    notion_api_version: str = Field(
+        default="2022-06-28",
+        description="Notion API version"
+    )
+
 
 # Global settings instance
 settings = Settings()
