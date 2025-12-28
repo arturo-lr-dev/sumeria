@@ -8,6 +8,7 @@ from fastmcp import FastMCP
 from app.config.settings import settings
 from app.config.mcp_config import mcp_config
 from app.mcp.tools.gmail_tools import gmail_tools
+from app.mcp.tools.holded_tools import holded_tools
 
 
 # Initialize MCP server
@@ -215,6 +216,150 @@ def set_default_gmail_account(account_id: str) -> dict:
         }
 
 
+# ============ Holded Tools ============
+
+@mcp.tool()
+async def holded_create_invoice(
+    contact_id: str,
+    items: list[dict],
+    doc_type: str = "invoice",
+    date: str = None,
+    due_date: str = None,
+    notes: str = None,
+    tags: list[str] = None,
+    payment_method: str = None
+):
+    """
+    Create a new invoice in Holded.
+
+    Items should be a list of dicts with: name, description, quantity, price, tax_rate, discount, product_id
+    Date format: YYYY-MM-DD
+    """
+    return await holded_tools.create_invoice(
+        contact_id=contact_id,
+        items=items,
+        doc_type=doc_type,
+        date=date,
+        due_date=due_date,
+        notes=notes,
+        tags=tags,
+        payment_method=payment_method
+    )
+
+
+@mcp.tool()
+async def holded_get_invoice(invoice_id: str):
+    """
+    Get detailed information about a specific invoice.
+
+    Returns complete invoice details including items, amounts, and status.
+    """
+    return await holded_tools.get_invoice(invoice_id=invoice_id)
+
+
+@mcp.tool()
+async def holded_list_invoices(
+    contact_id: str = None,
+    status: str = None,
+    doc_type: str = None,
+    from_date: str = None,
+    to_date: str = None,
+    paid: bool = None,
+    max_results: int = 10
+):
+    """
+    List invoices from Holded with optional filters.
+
+    Status options: draft, sent, paid, cancelled
+    Doc type options: invoice, quote, proforma, delivery_note, etc.
+    Date format: YYYY-MM-DD
+    """
+    return await holded_tools.list_invoices(
+        contact_id=contact_id,
+        status=status,
+        doc_type=doc_type,
+        from_date=from_date,
+        to_date=to_date,
+        paid=paid,
+        max_results=max_results
+    )
+
+
+@mcp.tool()
+async def holded_create_contact(
+    name: str,
+    email: str = None,
+    phone: str = None,
+    mobile: str = None,
+    vat_number: str = None,
+    type: str = "client",
+    notes: str = None,
+    billing_address: dict = None,
+    shipping_address: dict = None,
+    tags: list[str] = None
+):
+    """
+    Create a new contact (customer or supplier) in Holded.
+
+    Type options: client, supplier
+    Address format: dict with keys: street, city, province, postal_code, country
+    """
+    return await holded_tools.create_contact(
+        name=name,
+        email=email,
+        phone=phone,
+        mobile=mobile,
+        vat_number=vat_number,
+        type=type,
+        notes=notes,
+        billing_address=billing_address,
+        shipping_address=shipping_address,
+        tags=tags
+    )
+
+
+@mcp.tool()
+async def holded_get_contact(contact_id: str):
+    """
+    Get detailed information about a specific contact.
+
+    Returns complete contact details including addresses and tax info.
+    """
+    return await holded_tools.get_contact(contact_id=contact_id)
+
+
+@mcp.tool()
+async def holded_list_contacts(
+    contact_type: str = None,
+    max_results: int = 100
+):
+    """
+    List contacts from Holded.
+
+    Type options: client, supplier (leave empty for all)
+    """
+    return await holded_tools.list_contacts(
+        contact_type=contact_type,
+        max_results=max_results
+    )
+
+
+@mcp.tool()
+async def holded_list_products(
+    active_only: bool = True,
+    max_results: int = 100
+):
+    """
+    List products from Holded.
+
+    Returns products with pricing, tax info, and stock status.
+    """
+    return await holded_tools.list_products(
+        active_only=active_only,
+        max_results=max_results
+    )
+
+
 # Add a prompt for common email workflows
 @mcp.prompt()
 def email_assistant():
@@ -231,6 +376,25 @@ def email_assistant():
             "- Managing labels (read/unread, starred, etc.)\n"
             "- Working with multiple Gmail accounts\n\n"
             "What would you like to do with your emails?"
+        )
+    ]
+
+
+@mcp.prompt()
+def holded_assistant():
+    """Helpful Holded business management assistant prompt."""
+    from mcp.server.fastmcp.prompts import base
+
+    return [
+        base.UserMessage(
+            "You are a helpful Holded business management assistant. "
+            "I can help you with:\n"
+            "- Creating and managing invoices, quotes, and proformas\n"
+            "- Managing customer and supplier contacts\n"
+            "- Viewing product catalog with pricing\n"
+            "- Filtering invoices by status, date, contact, etc.\n"
+            "- Creating contacts with full address and tax information\n\n"
+            "What would you like to do with your Holded account?"
         )
     ]
 
