@@ -4,6 +4,7 @@ Unit tests for Notion client.
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from tenacity import RetryError
 
 from app.infrastructure.connectors.notion.client import NotionClient
 from app.domain.entities.notion_page import NotionPageDraft, NotionPageSearchCriteria
@@ -294,11 +295,9 @@ class TestNotionClient:
             parent_type="page_id"
         )
 
-        # Execute and assert
-        with pytest.raises(Exception) as exc_info:
+        # Execute and assert - retry decorator wraps exceptions in RetryError
+        with pytest.raises(RetryError):
             await notion_client.create_page(draft)
-
-        assert "Failed to create page" in str(exc_info.value)
 
     def test_client_requires_api_key(self):
         """Test that client requires API key."""
