@@ -8,6 +8,8 @@ from typing import Any, Optional
 from app.domain.entities.invoice import Invoice, InvoiceItem, InvoiceDraft
 from app.domain.entities.contact import Contact, ContactAddress, ContactDraft
 from app.domain.entities.product import Product
+from app.domain.entities.treasury import TreasuryAccount, TreasuryAccountDraft
+from app.domain.entities.accounting import ExpenseAccount, IncomeAccount
 
 
 class HoldedMapper:
@@ -280,3 +282,153 @@ class HoldedMapper:
         )
 
         return product
+
+    # ============ Treasury Mapping ============
+
+    @staticmethod
+    def to_treasury_entity(data: dict[str, Any]) -> TreasuryAccount:
+        """
+        Convert Holded treasury data to TreasuryAccount entity.
+
+        Args:
+            data: Holded API response data
+
+        Returns:
+            TreasuryAccount entity
+        """
+        created_at = None
+        if data.get("createdAt"):
+            created_at = datetime.fromtimestamp(data["createdAt"])
+
+        updated_at = None
+        if data.get("updatedAt"):
+            updated_at = datetime.fromtimestamp(data["updatedAt"])
+
+        treasury = TreasuryAccount(
+            id=data.get("id"),
+            name=data.get("name", ""),
+            iban=data.get("iban"),
+            swift=data.get("swift"),
+            bank_name=data.get("bankName"),
+            accounting_account=data.get("accountingAccount"),
+            accounting_account_number=data.get("accountNumber"),
+            balance=float(data.get("balance", 0)),
+            initial_balance=float(data.get("initialBalance", 0)),
+            active=data.get("active", True),
+            type=data.get("type", "bank"),
+            notes=data.get("notes"),
+            created_at=created_at,
+            updated_at=updated_at
+        )
+
+        return treasury
+
+    @staticmethod
+    def from_treasury_draft(draft: TreasuryAccountDraft) -> dict[str, Any]:
+        """
+        Convert TreasuryAccountDraft to Holded API format.
+
+        Args:
+            draft: Treasury account draft
+
+        Returns:
+            Data for Holded API
+        """
+        data = {
+            "name": draft.name,
+            "type": draft.type
+        }
+
+        if draft.iban:
+            data["iban"] = draft.iban
+
+        if draft.swift:
+            data["swift"] = draft.swift
+
+        if draft.bank_name:
+            data["bankName"] = draft.bank_name
+
+        if draft.accounting_account_number:
+            data["accountNumber"] = draft.accounting_account_number
+
+        if draft.initial_balance:
+            data["initialBalance"] = draft.initial_balance
+
+        if draft.notes:
+            data["notes"] = draft.notes
+
+        return data
+
+    # ============ Accounting Mapping ============
+
+    @staticmethod
+    def to_expense_account_entity(data: dict[str, Any]) -> ExpenseAccount:
+        """
+        Convert Holded expense account data to ExpenseAccount entity.
+
+        Args:
+            data: Holded API response data
+
+        Returns:
+            ExpenseAccount entity
+        """
+        created_at = None
+        if data.get("createdAt"):
+            created_at = datetime.fromtimestamp(data["createdAt"])
+
+        updated_at = None
+        if data.get("updatedAt"):
+            updated_at = datetime.fromtimestamp(data["updatedAt"])
+
+        expense_account = ExpenseAccount(
+            id=data.get("id"),
+            name=data.get("name", ""),
+            account_number=data.get("accountNumber"),
+            code=data.get("code"),
+            category=data.get("category"),
+            subcategory=data.get("subcategory"),
+            description=data.get("desc") or data.get("description"),
+            active=data.get("active", True),
+            balance=float(data.get("balance", 0)),
+            parent_id=data.get("parentId"),
+            created_at=created_at,
+            updated_at=updated_at
+        )
+
+        return expense_account
+
+    @staticmethod
+    def to_income_account_entity(data: dict[str, Any]) -> IncomeAccount:
+        """
+        Convert Holded income account data to IncomeAccount entity.
+
+        Args:
+            data: Holded API response data
+
+        Returns:
+            IncomeAccount entity
+        """
+        created_at = None
+        if data.get("createdAt"):
+            created_at = datetime.fromtimestamp(data["createdAt"])
+
+        updated_at = None
+        if data.get("updatedAt"):
+            updated_at = datetime.fromtimestamp(data["updatedAt"])
+
+        income_account = IncomeAccount(
+            id=data.get("id"),
+            name=data.get("name", ""),
+            account_number=data.get("accountNumber"),
+            code=data.get("code"),
+            category=data.get("category"),
+            subcategory=data.get("subcategory"),
+            description=data.get("desc") or data.get("description"),
+            active=data.get("active", True),
+            balance=float(data.get("balance", 0)),
+            parent_id=data.get("parentId"),
+            created_at=created_at,
+            updated_at=updated_at
+        )
+
+        return income_account

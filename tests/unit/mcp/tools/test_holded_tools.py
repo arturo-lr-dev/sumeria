@@ -8,6 +8,8 @@ from app.mcp.tools.holded_tools import HoldedTools
 from app.domain.entities.invoice import Invoice, InvoiceItem
 from app.domain.entities.contact import Contact
 from app.domain.entities.product import Product
+from app.domain.entities.treasury import TreasuryAccount
+from app.domain.entities.accounting import ExpenseAccount, IncomeAccount
 
 
 @pytest.fixture
@@ -162,3 +164,75 @@ async def test_list_products_tool(holded_tools):
     assert result.success is True
     assert result.count == 2
     assert len(result.products) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_treasury_accounts_tool(holded_tools):
+    """Test list treasury accounts tool."""
+    # Arrange
+    mock_accounts = [
+        TreasuryAccount(id="treasury1", name="Main Bank", balance=5000.0, type="bank", active=True),
+        TreasuryAccount(id="treasury2", name="Cash", balance=1000.0, type="cash", active=True)
+    ]
+    mock_response = AsyncMock()
+    mock_response.success = True
+    mock_response.accounts = mock_accounts
+    mock_response.count = 2
+    mock_response.error = None
+
+    # Act
+    with patch.object(holded_tools.list_treasury_accounts_uc, 'execute', return_value=mock_response):
+        result = await holded_tools.list_treasury_accounts()
+
+    # Assert
+    assert result.success is True
+    assert result.count == 2
+    assert len(result.accounts) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_expense_accounts_tool(holded_tools):
+    """Test list expense accounts tool."""
+    # Arrange
+    mock_accounts = [
+        ExpenseAccount(id="expense1", name="Office Supplies", account_number="6000", balance=2500.0, active=True),
+        ExpenseAccount(id="expense2", name="Rent", account_number="6100", balance=5000.0, active=True)
+    ]
+    mock_response = AsyncMock()
+    mock_response.success = True
+    mock_response.accounts = mock_accounts
+    mock_response.count = 2
+    mock_response.error = None
+
+    # Act
+    with patch.object(holded_tools.list_expense_accounts_uc, 'execute', return_value=mock_response):
+        result = await holded_tools.list_expense_accounts()
+
+    # Assert
+    assert result.success is True
+    assert result.count == 2
+    assert len(result.accounts) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_income_accounts_tool(holded_tools):
+    """Test list income accounts tool."""
+    # Arrange
+    mock_accounts = [
+        IncomeAccount(id="income1", name="Sales Revenue", account_number="7000", balance=15000.0, active=True),
+        IncomeAccount(id="income2", name="Service Revenue", account_number="7100", balance=10000.0, active=True)
+    ]
+    mock_response = AsyncMock()
+    mock_response.success = True
+    mock_response.accounts = mock_accounts
+    mock_response.count = 2
+    mock_response.error = None
+
+    # Act
+    with patch.object(holded_tools.list_income_accounts_uc, 'execute', return_value=mock_response):
+        result = await holded_tools.list_income_accounts()
+
+    # Assert
+    assert result.success is True
+    assert result.count == 2
+    assert len(result.accounts) == 2

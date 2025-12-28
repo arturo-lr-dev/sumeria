@@ -40,6 +40,17 @@ Un servidor MCP (Model Context Protocol) para gestionar Gmail y Holded con sopor
 ### Holded - Catálogo de Productos
 - `holded_list_products` - Listar productos con precios y stock
 
+### Holded - Gestión de Tesorería
+- `holded_create_treasury_account` - Crear cuentas de banco o caja
+- `holded_get_treasury_account` - Obtener detalles de una cuenta de tesorería
+- `holded_list_treasury_accounts` - Listar todas las cuentas de tesorería
+
+### Holded - Contabilidad
+- `holded_list_expense_accounts` - Listar cuentas de gastos del plan contable
+- `holded_get_expense_account` - Obtener detalles de una cuenta de gastos
+- `holded_list_income_accounts` - Listar cuentas de ingresos del plan contable
+- `holded_get_income_account` - Obtener detalles de una cuenta de ingresos
+
 ## Instalación
 
 ### 1. Clonar el repositorio

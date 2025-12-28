@@ -192,6 +192,97 @@ List products from your Holded catalog.
 **Returns:**
 - List of products with pricing, tax rates, and stock information
 
+### Treasury Management
+
+#### `holded_create_treasury_account`
+
+Create a new treasury account (bank account, cash account, etc.).
+
+**Parameters:**
+- `name` (required): Account name
+- `iban`: IBAN number (optional)
+- `swift`: SWIFT/BIC code (optional)
+- `bank_name`: Bank name (optional)
+- `accounting_account_number`: Accounting account number (optional)
+- `initial_balance`: Initial balance (default: 0.0)
+- `type`: Account type (default: "bank")
+  - Options: bank, cash, other
+- `notes`: Additional notes (optional)
+
+**Example:**
+```python
+{
+    "name": "Business Checking Account",
+    "iban": "ES9121000418450200051332",
+    "swift": "BBVAESMMXXX",
+    "bank_name": "BBVA",
+    "initial_balance": 10000.0,
+    "type": "bank"
+}
+```
+
+#### `holded_get_treasury_account`
+
+Get detailed information about a specific treasury account.
+
+**Parameters:**
+- `treasury_id` (required): Holded treasury account ID
+
+**Returns:**
+- Complete treasury account details including balance, IBAN, and bank information
+
+#### `holded_list_treasury_accounts`
+
+List all treasury accounts.
+
+**Parameters:**
+- `max_results`: Maximum results to return (default: 100)
+
+**Returns:**
+- List of treasury accounts with their balances and details
+
+### Accounting
+
+#### `holded_list_expense_accounts`
+
+List expense accounts from the chart of accounts.
+
+**Parameters:**
+- `max_results`: Maximum results to return (default: 100)
+
+**Returns:**
+- List of expense accounts with account numbers and balances
+
+#### `holded_get_expense_account`
+
+Get detailed information about a specific expense account.
+
+**Parameters:**
+- `account_id` (required): Holded expense account ID
+
+**Returns:**
+- Complete expense account details including account number and balance
+
+#### `holded_list_income_accounts`
+
+List income accounts from the chart of accounts.
+
+**Parameters:**
+- `max_results`: Maximum results to return (default: 100)
+
+**Returns:**
+- List of income accounts with account numbers and balances
+
+#### `holded_get_income_account`
+
+Get detailed information about a specific income account.
+
+**Parameters:**
+- `account_id` (required): Holded income account ID
+
+**Returns:**
+- Complete income account details including account number and balance
+
 ## Architecture
 
 The Holded integration follows the clean architecture pattern:

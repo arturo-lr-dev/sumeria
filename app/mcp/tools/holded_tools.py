@@ -33,6 +33,34 @@ from app.application.use_cases.holded.list_products import (
     ListProductsUseCase,
     ListProductsRequest
 )
+from app.application.use_cases.holded.create_treasury_account import (
+    CreateTreasuryAccountUseCase,
+    CreateTreasuryAccountRequest
+)
+from app.application.use_cases.holded.get_treasury_account import (
+    GetTreasuryAccountUseCase,
+    GetTreasuryAccountRequest
+)
+from app.application.use_cases.holded.list_treasury_accounts import (
+    ListTreasuryAccountsUseCase,
+    ListTreasuryAccountsRequest
+)
+from app.application.use_cases.holded.list_expense_accounts import (
+    ListExpenseAccountsUseCase,
+    ListExpenseAccountsRequest
+)
+from app.application.use_cases.holded.get_expense_account import (
+    GetExpenseAccountUseCase,
+    GetExpenseAccountRequest
+)
+from app.application.use_cases.holded.list_income_accounts import (
+    ListIncomeAccountsUseCase,
+    ListIncomeAccountsRequest
+)
+from app.application.use_cases.holded.get_income_account import (
+    GetIncomeAccountUseCase,
+    GetIncomeAccountRequest
+)
 
 
 # Response models for structured output
@@ -156,6 +184,87 @@ class ListProductsResult(BaseModel):
     error: Optional[str] = None
 
 
+class TreasuryAccountSummary(BaseModel):
+    """Summary of a treasury account for display."""
+    id: str
+    name: str
+    iban: Optional[str] = None
+    bank_name: Optional[str] = None
+    balance: float
+    type: str
+    active: bool
+
+
+class CreateTreasuryAccountResult(BaseModel):
+    """Result of creating a treasury account."""
+    success: bool
+    treasury_id: Optional[str] = None
+    error: Optional[str] = None
+
+
+class GetTreasuryAccountResult(BaseModel):
+    """Result of getting treasury account details."""
+    success: bool
+    account: Optional[TreasuryAccountSummary] = None
+    error: Optional[str] = None
+
+
+class ListTreasuryAccountsResult(BaseModel):
+    """Result of listing treasury accounts."""
+    success: bool
+    count: int
+    accounts: list[TreasuryAccountSummary]
+    error: Optional[str] = None
+
+
+class ExpenseAccountSummary(BaseModel):
+    """Summary of an expense account for display."""
+    id: str
+    name: str
+    account_number: Optional[str] = None
+    balance: float
+    active: bool
+
+
+class GetExpenseAccountResult(BaseModel):
+    """Result of getting expense account details."""
+    success: bool
+    account: Optional[ExpenseAccountSummary] = None
+    error: Optional[str] = None
+
+
+class ListExpenseAccountsResult(BaseModel):
+    """Result of listing expense accounts."""
+    success: bool
+    count: int
+    accounts: list[ExpenseAccountSummary]
+    error: Optional[str] = None
+
+
+class IncomeAccountSummary(BaseModel):
+    """Summary of an income account for display."""
+    id: str
+    name: str
+    account_number: Optional[str] = None
+    balance: float
+    active: bool
+
+
+class GetIncomeAccountResult(BaseModel):
+    """Result of getting income account details."""
+    success: bool
+    account: Optional[IncomeAccountSummary] = None
+    error: Optional[str] = None
+
+
+class ListIncomeAccountsResult(BaseModel):
+    """Result of listing income accounts."""
+    success: bool
+    count: int
+    accounts: list[IncomeAccountSummary]
+    error: Optional[str] = None
+
+
 class HoldedTools:
     """Collection of Holded MCP tools."""
 
@@ -168,6 +277,13 @@ class HoldedTools:
         self.get_contact_uc = GetContactUseCase()
         self.list_contacts_uc = ListContactsUseCase()
         self.list_products_uc = ListProductsUseCase()
+        self.create_treasury_account_uc = CreateTreasuryAccountUseCase()
+        self.get_treasury_account_uc = GetTreasuryAccountUseCase()
+        self.list_treasury_accounts_uc = ListTreasuryAccountsUseCase()
+        self.list_expense_accounts_uc = ListExpenseAccountsUseCase()
+        self.get_expense_account_uc = GetExpenseAccountUseCase()
+        self.list_income_accounts_uc = ListIncomeAccountsUseCase()
+        self.get_income_account_uc = GetIncomeAccountUseCase()
 
     async def create_invoice(
         self,
@@ -531,6 +647,269 @@ class HoldedTools:
             count=response.count,
             products=products,
             error=response.error
+        )
+
+    async def create_treasury_account(
+        self,
+        name: str,
+        iban: Optional[str] = None,
+        swift: Optional[str] = None,
+        bank_name: Optional[str] = None,
+        accounting_account_number: Optional[str] = None,
+        initial_balance: float = 0.0,
+        type: str = "bank",
+        notes: Optional[str] = None
+    ) -> CreateTreasuryAccountResult:
+        """
+        Create a new treasury account in Holded.
+
+        Args:
+            name: Account name (required)
+            iban: IBAN number
+            swift: SWIFT/BIC code
+            bank_name: Bank name
+            accounting_account_number: Accounting account number
+            initial_balance: Initial balance (default: 0.0)
+            type: Account type (bank, cash, other)
+            notes: Additional notes
+
+        Returns:
+            CreateTreasuryAccountResult with success status and treasury ID
+        """
+        request = CreateTreasuryAccountRequest(
+            name=name,
+            iban=iban,
+            swift=swift,
+            bank_name=bank_name,
+            accounting_account_number=accounting_account_number,
+            initial_balance=initial_balance,
+            type=type,
+            notes=notes
+        )
+
+        response = await self.create_treasury_account_uc.execute(request)
+
+        return CreateTreasuryAccountResult(
+            success=response.success,
+            treasury_id=response.treasury_id,
+            error=response.error
+        )
+
+    async def get_treasury_account(self, treasury_id: str) -> GetTreasuryAccountResult:
+        """
+        Get detailed information about a specific treasury account.
+
+        Args:
+            treasury_id: Holded treasury account ID
+
+        Returns:
+            GetTreasuryAccountResult with complete account details
+        """
+        request = GetTreasuryAccountRequest(treasury_id=treasury_id)
+
+        response = await self.get_treasury_account_uc.execute(request)
+
+        if not response.success or not response.treasury_account:
+            return GetTreasuryAccountResult(
+                success=False,
+                error=response.error
+            )
+
+        account = response.treasury_account
+
+        account_summary = TreasuryAccountSummary(
+            id=account.id or "",
+            name=account.name,
+            iban=account.iban,
+            bank_name=account.bank_name,
+            balance=account.balance,
+            type=account.type,
+            active=account.active
+        )
+
+        return GetTreasuryAccountResult(
+            success=True,
+            account=account_summary
+        )
+
+    async def list_treasury_accounts(
+        self,
+        max_results: int = 100
+    ) -> ListTreasuryAccountsResult:
+        """
+        List treasury accounts from Holded.
+
+        Args:
+            max_results: Maximum number of results (default: 100)
+
+        Returns:
+            ListTreasuryAccountsResult with matching accounts
+        """
+        request = ListTreasuryAccountsRequest(max_results=max_results)
+
+        response = await self.list_treasury_accounts_uc.execute(request)
+
+        # Convert to summaries
+        accounts = [
+            TreasuryAccountSummary(
+                id=account.id or "",
+                name=account.name,
+                iban=account.iban,
+                bank_name=account.bank_name,
+                balance=account.balance,
+                type=account.type,
+                active=account.active
+            )
+            for account in response.accounts
+        ]
+
+        return ListTreasuryAccountsResult(
+            success=response.success,
+            count=response.count,
+            accounts=accounts,
+            error=response.error
+        )
+
+    async def list_expense_accounts(
+        self,
+        max_results: int = 100
+    ) -> ListExpenseAccountsResult:
+        """
+        List expense accounts from Holded.
+
+        Args:
+            max_results: Maximum number of results (default: 100)
+
+        Returns:
+            ListExpenseAccountsResult with matching accounts
+        """
+        request = ListExpenseAccountsRequest(max_results=max_results)
+
+        response = await self.list_expense_accounts_uc.execute(request)
+
+        # Convert to summaries
+        accounts = [
+            ExpenseAccountSummary(
+                id=account.id or "",
+                name=account.name,
+                account_number=account.account_number,
+                balance=account.balance,
+                active=account.active
+            )
+            for account in response.accounts
+        ]
+
+        return ListExpenseAccountsResult(
+            success=response.success,
+            count=response.count,
+            accounts=accounts,
+            error=response.error
+        )
+
+    async def get_expense_account(self, account_id: str) -> GetExpenseAccountResult:
+        """
+        Get detailed information about a specific expense account.
+
+        Args:
+            account_id: Holded expense account ID
+
+        Returns:
+            GetExpenseAccountResult with complete account details
+        """
+        request = GetExpenseAccountRequest(account_id=account_id)
+
+        response = await self.get_expense_account_uc.execute(request)
+
+        if not response.success or not response.account:
+            return GetExpenseAccountResult(
+                success=False,
+                error=response.error
+            )
+
+        account = response.account
+
+        account_summary = ExpenseAccountSummary(
+            id=account.id or "",
+            name=account.name,
+            account_number=account.account_number,
+            balance=account.balance,
+            active=account.active
+        )
+
+        return GetExpenseAccountResult(
+            success=True,
+            account=account_summary
+        )
+
+    async def list_income_accounts(
+        self,
+        max_results: int = 100
+    ) -> ListIncomeAccountsResult:
+        """
+        List income accounts from Holded.
+
+        Args:
+            max_results: Maximum number of results (default: 100)
+
+        Returns:
+            ListIncomeAccountsResult with matching accounts
+        """
+        request = ListIncomeAccountsRequest(max_results=max_results)
+
+        response = await self.list_income_accounts_uc.execute(request)
+
+        # Convert to summaries
+        accounts = [
+            IncomeAccountSummary(
+                id=account.id or "",
+                name=account.name,
+                account_number=account.account_number,
+                balance=account.balance,
+                active=account.active
+            )
+            for account in response.accounts
+        ]
+
+        return ListIncomeAccountsResult(
+            success=response.success,
+            count=response.count,
+            accounts=accounts,
+            error=response.error
+        )
+
+    async def get_income_account(self, account_id: str) -> GetIncomeAccountResult:
+        """
+        Get detailed information about a specific income account.
+
+        Args:
+            account_id: Holded income account ID
+
+        Returns:
+            GetIncomeAccountResult with complete account details
+        """
+        request = GetIncomeAccountRequest(account_id=account_id)
+
+        response = await self.get_income_account_uc.execute(request)
+
+        if not response.success or not response.account:
+            return GetIncomeAccountResult(
+                success=False,
+                error=response.error
+            )
+
+        account = response.account
+
+        account_summary = IncomeAccountSummary(
+            id=account.id or "",
+            name=account.name,
+            account_number=account.account_number,
+            balance=account.balance,
+            active=account.active
+        )
+
+        return GetIncomeAccountResult(
+            success=True,
+            account=account_summary
         )
 
 

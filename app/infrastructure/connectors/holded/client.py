@@ -11,6 +11,8 @@ from app.infrastructure.connectors.holded.schemas import HoldedMapper
 from app.domain.entities.invoice import Invoice, InvoiceDraft, InvoiceSearchCriteria
 from app.domain.entities.contact import Contact, ContactDraft
 from app.domain.entities.product import Product
+from app.domain.entities.treasury import TreasuryAccount, TreasuryAccountDraft
+from app.domain.entities.accounting import ExpenseAccount, IncomeAccount
 
 
 class HoldedClient:
@@ -335,3 +337,197 @@ class HoldedClient:
 
         except Exception as error:
             raise Exception(f"Failed to get product: {error}")
+
+    # ============ Treasury Operations ============
+
+    async def create_treasury_account(self, draft: "TreasuryAccountDraft") -> str:
+        """
+        Create a new treasury account.
+
+        Args:
+            draft: Treasury account draft
+
+        Returns:
+            Treasury account ID
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = HoldedMapper.from_treasury_draft(draft)
+
+            result = await self._request(
+                method="POST",
+                endpoint="/api/invoicing/v1/treasury",
+                data=data
+            )
+
+            return result.get("id", "")
+
+        except Exception as error:
+            raise Exception(f"Failed to create treasury account: {error}")
+
+    async def get_treasury_account(self, treasury_id: str) -> "TreasuryAccount":
+        """
+        Get treasury account by ID.
+
+        Args:
+            treasury_id: Treasury account ID
+
+        Returns:
+            TreasuryAccount entity
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = await self._request(
+                method="GET",
+                endpoint=f"/api/invoicing/v1/treasury/{treasury_id}"
+            )
+
+            return HoldedMapper.to_treasury_entity(data)
+
+        except Exception as error:
+            raise Exception(f"Failed to get treasury account: {error}")
+
+    async def list_treasury_accounts(self, max_results: int = 100) -> list["TreasuryAccount"]:
+        """
+        List all treasury accounts.
+
+        Args:
+            max_results: Maximum number of results
+
+        Returns:
+            List of treasury accounts
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = await self._request(
+                method="GET",
+                endpoint="/api/invoicing/v1/treasury"
+            )
+
+            accounts = []
+            for item in data:
+                accounts.append(HoldedMapper.to_treasury_entity(item))
+
+            return accounts[:max_results]
+
+        except Exception as error:
+            raise Exception(f"Failed to list treasury accounts: {error}")
+
+    # ============ Accounting Operations ============
+
+    async def list_expense_accounts(self, max_results: int = 100) -> list["ExpenseAccount"]:
+        """
+        List all expense accounts.
+
+        Args:
+            max_results: Maximum number of results
+
+        Returns:
+            List of expense accounts
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = await self._request(
+                method="GET",
+                endpoint="/api/invoicing/v1/expenses/accounts"
+            )
+
+            accounts = []
+            for item in data:
+                accounts.append(HoldedMapper.to_expense_account_entity(item))
+
+            return accounts[:max_results]
+
+        except Exception as error:
+            raise Exception(f"Failed to list expense accounts: {error}")
+
+    async def get_expense_account(self, account_id: str) -> "ExpenseAccount":
+        """
+        Get expense account by ID.
+
+        Args:
+            account_id: Expense account ID
+
+        Returns:
+            ExpenseAccount entity
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = await self._request(
+                method="GET",
+                endpoint=f"/api/invoicing/v1/expenses/accounts/{account_id}"
+            )
+
+            return HoldedMapper.to_expense_account_entity(data)
+
+        except Exception as error:
+            raise Exception(f"Failed to get expense account: {error}")
+
+    async def list_income_accounts(self, max_results: int = 100) -> list["IncomeAccount"]:
+        """
+        List all income accounts.
+
+        Args:
+            max_results: Maximum number of results
+
+        Returns:
+            List of income accounts
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = await self._request(
+                method="GET",
+                endpoint="/api/invoicing/v1/income/accounts"
+            )
+
+            accounts = []
+            for item in data:
+                accounts.append(HoldedMapper.to_income_account_entity(item))
+
+            return accounts[:max_results]
+
+        except Exception as error:
+            raise Exception(f"Failed to list income accounts: {error}")
+
+    async def get_income_account(self, account_id: str) -> "IncomeAccount":
+        """
+        Get income account by ID.
+
+        Args:
+            account_id: Income account ID
+
+        Returns:
+            IncomeAccount entity
+
+        Raises:
+            httpx.HTTPError: If API request fails
+        """
+        try:
+            from app.infrastructure.connectors.holded.schemas import HoldedMapper
+            data = await self._request(
+                method="GET",
+                endpoint=f"/api/invoicing/v1/income/accounts/{account_id}"
+            )
+
+            return HoldedMapper.to_income_account_entity(data)
+
+        except Exception as error:
+            raise Exception(f"Failed to get income account: {error}")

@@ -162,3 +162,75 @@ def test_product_entity_mapping():
     assert product.price == 100.0
     assert product.tax_rate == 21.0
     assert product.active is True
+
+
+def test_to_treasury_entity():
+    """Test mapping Holded treasury data to TreasuryAccount entity."""
+    # Arrange
+    holded_data = {
+        "id": "treasury123",
+        "name": "Main Bank Account",
+        "iban": "ES1234567890",
+        "bankName": "Test Bank",
+        "balance": 5000.0,
+        "type": "bank",
+        "active": True
+    }
+
+    # Act
+    treasury = HoldedMapper.to_treasury_entity(holded_data)
+
+    # Assert
+    assert treasury.id == "treasury123"
+    assert treasury.name == "Main Bank Account"
+    assert treasury.iban == "ES1234567890"
+    assert treasury.bank_name == "Test Bank"
+    assert treasury.balance == 5000.0
+    assert treasury.type == "bank"
+    assert treasury.active is True
+
+
+def test_to_expense_account_entity():
+    """Test mapping Holded expense account data to ExpenseAccount entity."""
+    # Arrange
+    holded_data = {
+        "id": "expense123",
+        "name": "Office Supplies",
+        "accountNumber": "6000",
+        "code": "6000",
+        "balance": 2500.0,
+        "active": True
+    }
+
+    # Act
+    expense = HoldedMapper.to_expense_account_entity(holded_data)
+
+    # Assert
+    assert expense.id == "expense123"
+    assert expense.name == "Office Supplies"
+    assert expense.account_number == "6000"
+    assert expense.balance == 2500.0
+    assert expense.active is True
+
+
+def test_to_income_account_entity():
+    """Test mapping Holded income account data to IncomeAccount entity."""
+    # Arrange
+    holded_data = {
+        "id": "income123",
+        "name": "Sales Revenue",
+        "accountNumber": "7000",
+        "code": "7000",
+        "balance": 15000.0,
+        "active": True
+    }
+
+    # Act
+    income = HoldedMapper.to_income_account_entity(holded_data)
+
+    # Assert
+    assert income.id == "income123"
+    assert income.name == "Sales Revenue"
+    assert income.account_number == "7000"
+    assert income.balance == 15000.0
+    assert income.active is True

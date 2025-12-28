@@ -149,3 +149,82 @@ async def test_list_products_success(holded_client):
     assert len(result) == 1
     assert result[0].name == "Product 1"
     assert result[0].price == 100.0
+
+
+@pytest.mark.asyncio
+async def test_list_treasury_accounts_success(holded_client):
+    """Test listing treasury accounts successfully."""
+    # Arrange
+    mock_response = [
+        {
+            "id": "treasury1",
+            "name": "Main Bank Account",
+            "iban": "ES1234567890",
+            "bankName": "Test Bank",
+            "balance": 5000.0,
+            "type": "bank",
+            "active": True
+        }
+    ]
+
+    # Act
+    with patch.object(holded_client, '_request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = mock_response
+        result = await holded_client.list_treasury_accounts()
+
+    # Assert
+    assert len(result) == 1
+    assert result[0].name == "Main Bank Account"
+    assert result[0].balance == 5000.0
+
+
+@pytest.mark.asyncio
+async def test_list_expense_accounts_success(holded_client):
+    """Test listing expense accounts successfully."""
+    # Arrange
+    mock_response = [
+        {
+            "id": "expense1",
+            "name": "Office Supplies",
+            "accountNumber": "6000",
+            "code": "6000",
+            "balance": 2500.0,
+            "active": True
+        }
+    ]
+
+    # Act
+    with patch.object(holded_client, '_request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = mock_response
+        result = await holded_client.list_expense_accounts()
+
+    # Assert
+    assert len(result) == 1
+    assert result[0].name == "Office Supplies"
+    assert result[0].balance == 2500.0
+
+
+@pytest.mark.asyncio
+async def test_list_income_accounts_success(holded_client):
+    """Test listing income accounts successfully."""
+    # Arrange
+    mock_response = [
+        {
+            "id": "income1",
+            "name": "Sales Revenue",
+            "accountNumber": "7000",
+            "code": "7000",
+            "balance": 15000.0,
+            "active": True
+        }
+    ]
+
+    # Act
+    with patch.object(holded_client, '_request', new_callable=AsyncMock) as mock_request:
+        mock_request.return_value = mock_response
+        result = await holded_client.list_income_accounts()
+
+    # Assert
+    assert len(result) == 1
+    assert result[0].name == "Sales Revenue"
+    assert result[0].balance == 15000.0

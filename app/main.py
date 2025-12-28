@@ -360,6 +360,94 @@ async def holded_list_products(
     )
 
 
+@mcp.tool()
+async def holded_create_treasury_account(
+    name: str,
+    iban: str | None = None,
+    swift: str | None = None,
+    bank_name: str | None = None,
+    accounting_account_number: str | None = None,
+    initial_balance: float = 0.0,
+    type: str = "bank",
+    notes: str | None = None
+):
+    """
+    Create a new treasury account in Holded.
+
+    Treasury accounts represent bank accounts, cash accounts, or other payment methods.
+    """
+    return await holded_tools.create_treasury_account(
+        name=name,
+        iban=iban,
+        swift=swift,
+        bank_name=bank_name,
+        accounting_account_number=accounting_account_number,
+        initial_balance=initial_balance,
+        type=type,
+        notes=notes
+    )
+
+
+@mcp.tool()
+async def holded_get_treasury_account(treasury_id: str):
+    """
+    Get detailed information about a specific treasury account.
+
+    Returns account details including balance, IBAN, and bank information.
+    """
+    return await holded_tools.get_treasury_account(treasury_id=treasury_id)
+
+
+@mcp.tool()
+async def holded_list_treasury_accounts(max_results: int = 100):
+    """
+    List treasury accounts from Holded.
+
+    Returns all treasury accounts with their balances and details.
+    """
+    return await holded_tools.list_treasury_accounts(max_results=max_results)
+
+
+@mcp.tool()
+async def holded_list_expense_accounts(max_results: int = 100):
+    """
+    List expense accounts from Holded.
+
+    Returns expense accounts from the chart of accounts with balances.
+    """
+    return await holded_tools.list_expense_accounts(max_results=max_results)
+
+
+@mcp.tool()
+async def holded_get_expense_account(account_id: str):
+    """
+    Get detailed information about a specific expense account.
+
+    Returns account details including account number and balance.
+    """
+    return await holded_tools.get_expense_account(account_id=account_id)
+
+
+@mcp.tool()
+async def holded_list_income_accounts(max_results: int = 100):
+    """
+    List income accounts from Holded.
+
+    Returns income accounts from the chart of accounts with balances.
+    """
+    return await holded_tools.list_income_accounts(max_results=max_results)
+
+
+@mcp.tool()
+async def holded_get_income_account(account_id: str):
+    """
+    Get detailed information about a specific income account.
+
+    Returns account details including account number and balance.
+    """
+    return await holded_tools.get_income_account(account_id=account_id)
+
+
 # Add a prompt for common email workflows
 @mcp.prompt()
 def email_assistant():
@@ -393,7 +481,10 @@ def holded_assistant():
             "- Managing customer and supplier contacts\n"
             "- Viewing product catalog with pricing\n"
             "- Filtering invoices by status, date, contact, etc.\n"
-            "- Creating contacts with full address and tax information\n\n"
+            "- Creating contacts with full address and tax information\n"
+            "- Managing treasury accounts (bank accounts, cash accounts)\n"
+            "- Viewing expense and income accounts from the chart of accounts\n"
+            "- Checking account balances and financial information\n\n"
             "What would you like to do with your Holded account?"
         )
     ]
