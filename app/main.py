@@ -9,6 +9,7 @@ from app.config.settings import settings
 from app.config.mcp_config import mcp_config
 from app.mcp.tools.gmail_tools import gmail_tools
 from app.mcp.tools.holded_tools import holded_tools
+from app.mcp.tools.notion_tools import notion_tools
 
 
 # Initialize MCP server
@@ -448,6 +449,199 @@ async def holded_get_income_account(account_id: str):
     return await holded_tools.get_income_account(account_id=account_id)
 
 
+# ============ Notion Tools ============
+
+@mcp.tool()
+async def notion_create_page(
+    title: str,
+    parent_id: str,
+    parent_type: str = "page_id",
+    properties: dict = None,
+    children: list = None,
+    icon: dict = None,
+    cover: dict = None
+):
+    """
+    Create a new page in Notion.
+
+    Parent types: page_id, database_id, workspace
+    Properties are optional for regular pages, required for database pages.
+    Children are initial content blocks.
+    """
+    return await notion_tools.create_page(
+        title=title,
+        parent_id=parent_id,
+        parent_type=parent_type,
+        properties=properties,
+        children=children,
+        icon=icon,
+        cover=cover
+    )
+
+
+@mcp.tool()
+async def notion_get_page(page_id: str):
+    """
+    Get detailed information about a Notion page.
+
+    Returns page details including title, properties, and metadata.
+    """
+    return await notion_tools.get_page(page_id=page_id)
+
+
+@mcp.tool()
+async def notion_update_page(
+    page_id: str,
+    properties: dict = None,
+    archived: bool = None,
+    icon: dict = None,
+    cover: dict = None
+):
+    """
+    Update a Notion page.
+
+    Can update properties, archive status, icon, or cover.
+    Only provide the fields you want to update.
+    """
+    return await notion_tools.update_page(
+        page_id=page_id,
+        properties=properties,
+        archived=archived,
+        icon=icon,
+        cover=cover
+    )
+
+
+@mcp.tool()
+async def notion_search(
+    query: str = None,
+    filter_type: str = None,
+    sort_direction: str = "descending",
+    sort_timestamp: str = "last_edited_time",
+    max_results: int = 100
+):
+    """
+    Search for pages in Notion workspace.
+
+    Filter types: page, database
+    Sort timestamps: last_edited_time, created_time
+    Sort directions: ascending, descending
+    """
+    return await notion_tools.search_pages(
+        query=query,
+        filter_type=filter_type,
+        sort_direction=sort_direction,
+        sort_timestamp=sort_timestamp,
+        max_results=max_results
+    )
+
+
+@mcp.tool()
+async def notion_create_database_entry(
+    database_id: str,
+    properties: dict,
+    icon: dict = None,
+    cover: dict = None,
+    children: list = None
+):
+    """
+    Create a new entry in a Notion database.
+
+    Properties must match the database schema.
+    Example property format:
+    {
+        "Name": {"title": [{"text": {"content": "Task name"}}]},
+        "Status": {"select": {"name": "In Progress"}},
+        "Due Date": {"date": {"start": "2025-01-15"}}
+    }
+    """
+    return await notion_tools.create_database_entry(
+        database_id=database_id,
+        properties=properties,
+        icon=icon,
+        cover=cover,
+        children=children
+    )
+
+
+@mcp.tool()
+async def notion_query_database(
+    database_id: str,
+    filter: dict = None,
+    sorts: list = None,
+    start_cursor: str = None,
+    page_size: int = 100
+):
+    """
+    Query a Notion database with filters and sorting.
+
+    Filter example:
+    {"property": "Status", "select": {"equals": "In Progress"}}
+
+    Sorts example:
+    [{"property": "Due Date", "direction": "ascending"}]
+    """
+    return await notion_tools.query_database(
+        database_id=database_id,
+        filter=filter,
+        sorts=sorts,
+        start_cursor=start_cursor,
+        page_size=page_size
+    )
+
+
+@mcp.tool()
+async def notion_append_content(
+    page_id: str,
+    blocks: list[dict]
+):
+    """
+    Append content blocks to a Notion page.
+
+    Block examples:
+    [
+        {
+            "type": "paragraph",
+            "content": {"rich_text": [{"type": "text", "text": {"content": "Hello"}}]}
+        },
+        {
+            "type": "heading_1",
+            "content": {"rich_text": [{"type": "text", "text": {"content": "Title"}}]}
+        },
+        {
+            "type": "to_do",
+            "content": {
+                "rich_text": [{"type": "text", "text": {"content": "Task"}}],
+                "checked": false
+            }
+        }
+    ]
+
+    Block types: paragraph, heading_1, heading_2, heading_3, bulleted_list_item,
+                 numbered_list_item, to_do, toggle, quote, callout
+    """
+    return await notion_tools.append_content(
+        page_id=page_id,
+        blocks=blocks
+    )
+
+
+@mcp.tool()
+async def notion_get_page_content(
+    page_id: str,
+    page_size: int = 100
+):
+    """
+    Get content blocks from a Notion page.
+
+    Returns all blocks (paragraphs, headings, lists, etc.) in the page.
+    """
+    return await notion_tools.get_page_content(
+        page_id=page_id,
+        page_size=page_size
+    )
+
+
 # Add a prompt for common email workflows
 @mcp.prompt()
 def email_assistant():
@@ -486,6 +680,27 @@ def holded_assistant():
             "- Viewing expense and income accounts from the chart of accounts\n"
             "- Checking account balances and financial information\n\n"
             "What would you like to do with your Holded account?"
+        )
+    ]
+
+
+@mcp.prompt()
+def notion_assistant():
+    """Helpful Notion workspace management assistant prompt."""
+    from mcp.server.fastmcp.prompts import base
+
+    return [
+        base.UserMessage(
+            "You are a helpful Notion workspace management assistant. "
+            "I can help you with:\n"
+            "- Creating and updating pages\n"
+            "- Searching across your Notion workspace\n"
+            "- Managing database entries (create, query, filter)\n"
+            "- Adding content to pages (paragraphs, headings, lists, to-dos)\n"
+            "- Querying databases with complex filters and sorting\n"
+            "- Organizing your workspace with parent-child page hierarchies\n"
+            "- Working with page properties and metadata\n\n"
+            "What would you like to do with your Notion workspace?"
         )
     ]
 
