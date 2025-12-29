@@ -207,7 +207,7 @@ class TestGmailOAuthHandler:
         assert handler.scopes == mock_settings.gmail_scopes
 
     def test_tokens_directory_creation(self, tmp_path, credentials_file):
-        """Test that tokens directory is created if it doesn't exist."""
+        """Test that tokens directory is created when saving credentials."""
         tokens_dir = tmp_path / "new_tokens_dir"
         assert not tokens_dir.exists()
 
@@ -216,6 +216,15 @@ class TestGmailOAuthHandler:
             credentials_file=credentials_file,
             tokens_dir=tokens_dir
         )
+
+        # Directory should not be created during initialization
+        assert not tokens_dir.exists()
+
+        # Directory should be created when saving credentials
+        mock_creds = MagicMock()
+        mock_creds.to_json.return_value = '{"token": "test"}'
+        handler._creds = mock_creds
+        handler._save_credentials()
 
         assert tokens_dir.exists()
         assert tokens_dir.is_dir()

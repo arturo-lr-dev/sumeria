@@ -35,7 +35,8 @@ class GmailOAuthHandler:
         self.scopes = scopes or settings.gmail_scopes
         self._creds: Optional[Credentials] = None
 
-        # Create tokens directory if it doesn't exist
+    def _ensure_tokens_dir(self) -> None:
+        """Ensure tokens directory exists."""
         self.tokens_dir.mkdir(parents=True, exist_ok=True)
 
     @property
@@ -92,6 +93,7 @@ class GmailOAuthHandler:
     def _save_credentials(self) -> None:
         """Save credentials to token file."""
         if self._creds:
+            self._ensure_tokens_dir()
             with open(self.token_file, 'w') as token:
                 token.write(self._creds.to_json())
 
