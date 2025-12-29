@@ -284,7 +284,8 @@ class NotionClient:
     async def get_block_children(
         self,
         block_id: str,
-        page_size: int = 100
+        page_size: int = 100,
+        recursive: bool = True
     ) -> list[NotionBlock]:
         """
         Get children blocks of a block or page.
@@ -292,6 +293,7 @@ class NotionClient:
         Args:
             block_id: Block or page ID
             page_size: Number of results per page
+            recursive: If True, recursively fetch children of blocks that have children (e.g., tables)
 
         Returns:
             List of child blocks
@@ -307,7 +309,17 @@ class NotionClient:
 
             blocks = []
             for result in data.get("results", []):
-                blocks.append(NotionMapper.to_block_entity(result))
+                block = NotionMapper.to_block_entity(result)
+
+                # If recursive mode and block has children, fetch them
+                if recursive and block.has_children:
+                    block.children = await self.get_block_children(
+                        block_id=block.id,
+                        page_size=page_size,
+                        recursive=True
+                    )
+
+                blocks.append(block)
 
             return blocks
 

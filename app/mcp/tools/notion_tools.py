@@ -101,6 +101,25 @@ class BlockSummary(BaseModel):
     type: str
     has_children: bool = False
 
+    # Text content (for text-based blocks)
+    text: Optional[str] = None
+
+    # Table-specific fields
+    table_width: Optional[int] = None
+    has_column_header: Optional[bool] = None
+    has_row_header: Optional[bool] = None
+    cells: Optional[list[str]] = None  # For table_row blocks
+
+    # Code block specific
+    language: Optional[str] = None
+
+    # Media blocks
+    url: Optional[str] = None
+    caption: Optional[str] = None
+
+    # Children blocks
+    children: Optional[list["BlockSummary"]] = None
+
 
 class AppendBlocksResult(BaseModel):
     """Result of appending blocks."""
@@ -116,6 +135,37 @@ class GetPageContentResult(BaseModel):
     count: int = 0
     blocks: list[BlockSummary] = []
     error: Optional[str] = None
+
+
+def _block_to_summary(block) -> BlockSummary:
+    """
+    Convert NotionBlock entity to BlockSummary.
+
+    Args:
+        block: NotionBlock entity
+
+    Returns:
+        BlockSummary model
+    """
+    # Convert children recursively
+    children = None
+    if block.children:
+        children = [_block_to_summary(child) for child in block.children]
+
+    return BlockSummary(
+        id=block.id,
+        type=block.type,
+        has_children=block.has_children,
+        text=block.text,
+        table_width=block.table_width,
+        has_column_header=block.has_column_header,
+        has_row_header=block.has_row_header,
+        cells=block.cells,
+        language=block.language,
+        url=block.url,
+        caption=block.caption,
+        children=children
+    )
 
 
 class NotionTools:
@@ -453,7 +503,8 @@ class NotionTools:
     async def get_page_content(
         self,
         page_id: str,
-        page_size: int = 100
+        page_size: int = 100,
+        recursive: bool = True
     ) -> GetPageContentResult:
         """
         Get content blocks from a Notion page.
@@ -461,13 +512,15 @@ class NotionTools:
         Args:
             page_id: Page ID
             page_size: Number of blocks to retrieve
+            recursive: Fetch children blocks recursively (needed for tables)
 
         Returns:
-            GetPageContentResult with page blocks
+            GetPageContentResult with page blocks including extracted text and table data
         """
         request = GetPageContentRequest(
             page_id=page_id,
-            page_size=page_size
+            page_size=page_size,
+            recursive=recursive
         )
 
         response = await self.get_page_content_uc.execute(request)
@@ -478,14 +531,8 @@ class NotionTools:
                 error=response.error
             )
 
-        blocks = [
-            BlockSummary(
-                id=block.id,
-                type=block.type,
-                has_children=block.has_children
-            )
-            for block in response.blocks
-        ]
+        # Convert NotionBlock entities to BlockSummary models with all fields
+        blocks = [_block_to_summary(block) for block in response.blocks]
 
         return GetPageContentResult(
             success=True,

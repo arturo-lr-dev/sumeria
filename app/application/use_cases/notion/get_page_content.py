@@ -14,6 +14,7 @@ class GetPageContentRequest:
     """Request to get page content."""
     page_id: str
     page_size: int = 100
+    recursive: bool = True  # Fetch children recursively (needed for tables, etc.)
 
 
 @dataclass
@@ -27,6 +28,27 @@ class GetPageContentResponse:
     def __post_init__(self):
         if self.blocks is None:
             self.blocks = []
+
+    def to_dict(self, include_content: bool = False, include_metadata: bool = False) -> dict:
+        """
+        Convert response to dictionary with serialized blocks.
+
+        Args:
+            include_content: Include raw API content in blocks
+            include_metadata: Include metadata (timestamps, created_by, etc.)
+
+        Returns:
+            Dictionary representation
+        """
+        return {
+            "success": self.success,
+            "count": self.count,
+            "blocks": [
+                block.to_dict(include_content=include_content, include_metadata=include_metadata)
+                for block in self.blocks
+            ],
+            "error": self.error
+        }
 
 
 class GetPageContentUseCase:
@@ -47,10 +69,11 @@ class GetPageContentUseCase:
             Response with content blocks or error
         """
         try:
-            # Get blocks
+            # Get blocks (with optional recursive children fetch)
             blocks = await self.client.get_block_children(
                 block_id=request.page_id,
-                page_size=request.page_size
+                page_size=request.page_size,
+                recursive=request.recursive
             )
 
             return GetPageContentResponse(

@@ -298,10 +298,74 @@ class NotionMapper:
                 api_data["last_edited_time"].replace("Z", "+00:00")
             )
 
+        # Extract type-specific data
+        text = None
+        table_width = None
+        has_column_header = None
+        has_row_header = None
+        cells = None
+        language = None
+        url = None
+        caption = None
+
+        # Text blocks: extract plain text from rich_text
+        if block_type in [
+            "paragraph", "heading_1", "heading_2", "heading_3",
+            "bulleted_list_item", "numbered_list_item", "to_do",
+            "toggle", "quote", "callout", "code"
+        ]:
+            rich_text = content.get("rich_text", [])
+            text = NotionMapper.extract_plain_text_from_rich_text(rich_text)
+
+        # Code blocks: extract language
+        if block_type == "code":
+            language = content.get("language")
+
+        # Table blocks: extract table properties
+        if block_type == "table":
+            table_width = content.get("table_width")
+            has_column_header = content.get("has_column_header")
+            has_row_header = content.get("has_row_header")
+
+        # Table row blocks: extract cells content
+        if block_type == "table_row":
+            cells_data = content.get("cells", [])
+            cells = [
+                NotionMapper.extract_plain_text_from_rich_text(cell)
+                for cell in cells_data
+            ]
+
+        # Media blocks: extract URL and caption
+        if block_type in ["image", "video", "file", "pdf"]:
+            # Get URL from external or file object
+            file_obj = content.get("external") or content.get("file")
+            if file_obj:
+                url = file_obj.get("url")
+
+            # Extract caption
+            caption_array = content.get("caption", [])
+            if caption_array:
+                caption = NotionMapper.extract_plain_text_from_rich_text(caption_array)
+
+        # Bookmark blocks: extract URL
+        if block_type == "bookmark":
+            url = content.get("url")
+            caption_array = content.get("caption", [])
+            if caption_array:
+                caption = NotionMapper.extract_plain_text_from_rich_text(caption_array)
+
         return NotionBlock(
             id=api_data.get("id"),
             type=block_type,
             content=content,
+            text=text,
+            table_width=table_width,
+            has_column_header=has_column_header,
+            has_row_header=has_row_header,
+            cells=cells,
+            language=language,
+            url=url,
+            caption=caption,
             has_children=api_data.get("has_children", False),
             created_time=created_time,
             last_edited_time=last_edited_time,
