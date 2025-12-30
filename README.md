@@ -1,16 +1,19 @@
 # Sumeria Personal Assistant
 
-Un servidor MCP (Model Context Protocol) para gestionar Gmail y Holded con soporte completo para operaciones de negocio.
+Un servidor MCP (Model Context Protocol) para gestionar Gmail, Holded, Notion y WhatsApp Business con soporte completo para operaciones de negocio y comunicación con clientes.
 
 ## Características
 
 - ✉️ **Gestión completa de Gmail**: Enviar, buscar, leer y organizar emails
 - 👥 **Múltiples cuentas Gmail**: Soporta múltiples cuentas de Gmail simultáneamente
 - 💼 **Integración con Holded**: Gestión de facturas, contactos y productos
-- 🔐 **Autenticación segura**: OAuth2 para Gmail, API Key para Holded
+- 📝 **Integración con Notion**: Gestión de páginas, bases de datos y contenido
+- 💬 **Integración con WhatsApp Business**: Envío de mensajes, multimedia y templates
+- 🔐 **Autenticación segura**: OAuth2 para Gmail, API Keys para servicios
 - 🏗️ **Arquitectura limpia**: DDD (Domain-Driven Design) con separación de capas
 - 🚀 **MCP Protocol**: Integración directa con Claude y otros clientes MCP
 - 📦 **Type-safe**: Completamente tipado con Pydantic
+- 🔔 **Webhooks**: Soporte para recibir mensajes de WhatsApp en tiempo real
 
 ## Herramientas Disponibles
 
@@ -51,6 +54,14 @@ Un servidor MCP (Model Context Protocol) para gestionar Gmail y Holded con sopor
 - `holded_list_income_accounts` - Listar cuentas de ingresos del plan contable
 - `holded_get_income_account` - Obtener detalles de una cuenta de ingresos
 
+### WhatsApp Business - Mensajería
+- `whatsapp_send_text` - Enviar mensajes de texto a clientes
+- `whatsapp_send_image` - Enviar imágenes con caption opcional
+- `whatsapp_send_document` - Enviar documentos (PDF, DOC, XLSX, etc.)
+- `whatsapp_send_template` - Enviar plantillas pre-aprobadas por Meta
+- `whatsapp_list_templates` - Listar plantillas disponibles y su estado
+- `whatsapp_download_media` - Descargar multimedia de mensajes recibidos
+
 ## Instalación
 
 ### 1. Clonar el repositorio
@@ -88,7 +99,16 @@ Sigue la guía detallada en [docs/gmail-setup.md](docs/gmail-setup.md) para:
 3. Genera una API key
 4. Copia la API key
 
-### 6. Configurar variables de entorno
+### 6. Configurar WhatsApp Business API (Opcional)
+
+Sigue la guía completa en [docs/whatsapp-setup.md](docs/whatsapp-setup.md) para:
+1. Crear Meta App en Facebook Developers
+2. Configurar WhatsApp Business Cloud API
+3. Obtener Access Token y Phone Number ID
+4. Configurar webhook para recibir mensajes
+5. Crear y aprobar plantillas de mensajes
+
+### 7. Configurar variables de entorno
 
 ```bash
 cp .env.example .env
@@ -102,6 +122,13 @@ GMAIL_DEFAULT_ACCOUNT=tu-email@gmail.com
 
 # Holded
 HOLDED_API_KEY=tu-api-key-de-holded
+
+# WhatsApp Business (Opcional)
+WHATSAPP_ACCESS_TOKEN=tu-meta-access-token
+WHATSAPP_PHONE_NUMBER_ID=tu-phone-number-id
+WHATSAPP_BUSINESS_ACCOUNT_ID=tu-business-account-id
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=token-secreto-aleatorio
+WHATSAPP_APP_SECRET=tu-app-secret
 ```
 
 ## Uso
@@ -110,6 +137,22 @@ HOLDED_API_KEY=tu-api-key-de-holded
 
 ```bash
 python -m app.main
+```
+
+### Ejecutar el servidor de Webhooks (para WhatsApp)
+
+Si vas a usar WhatsApp, necesitas ejecutar también el servidor de webhooks:
+
+```bash
+# En otra terminal
+python -m app.api_server
+```
+
+Esto iniciará un servidor FastAPI en `http://localhost:8000` para recibir mensajes de WhatsApp.
+
+Para desarrollo local, usa ngrok o cloudflared para exponer el webhook:
+```bash
+ngrok http 8000
 ```
 
 ### Primer uso - Autenticación
@@ -201,6 +244,50 @@ holded_list_invoices(
 
 Ver más ejemplos en [docs/holded-integration.md](docs/holded-integration.md)
 
+#### WhatsApp - Enviar mensaje de texto
+
+```python
+whatsapp_send_text(
+    to="+14155552671",  # Formato E.164 (+ código país + número)
+    text="¡Hola! Tu pedido ha sido confirmado y se enviará pronto.",
+    preview_url=False
+)
+```
+
+#### WhatsApp - Enviar imagen
+
+```python
+whatsapp_send_image(
+    to="+14155552671",
+    image_url="https://example.com/product.jpg",
+    caption="Aquí está la imagen del producto que solicitaste"
+)
+```
+
+#### WhatsApp - Enviar documento
+
+```python
+whatsapp_send_document(
+    to="+14155552671",
+    document_path="/path/to/factura.pdf",
+    filename="Factura_Enero_2025.pdf",
+    caption="Adjunto tu factura del mes de enero"
+)
+```
+
+#### WhatsApp - Enviar plantilla
+
+```python
+whatsapp_send_template(
+    to="+14155552671",
+    template_name="order_confirmation",
+    language="es_ES",
+    parameters=["Juan Pérez", "12345", "15 de Enero"]
+)
+```
+
+Ver la guía completa de configuración en [docs/whatsapp-setup.md](docs/whatsapp-setup.md)
+
 ## Estructura del Proyecto
 
 ```
@@ -215,17 +302,25 @@ sumeria/
 │   ├── infrastructure/      # Implementaciones técnicas
 │   │   ├── connectors/      # Integraciones externas
 │   │   │   ├── gmail/       # Cliente Gmail, OAuth, Schemas
-│   │   │   └── holded/      # Cliente Holded, API, Schemas
+│   │   │   ├── holded/      # Cliente Holded, API, Schemas
+│   │   │   ├── notion/      # Cliente Notion, API, Schemas
+│   │   │   └── whatsapp/    # Cliente WhatsApp, API, Schemas
 │   │   ├── queue/           # Celery/ARQ (futuro)
 │   │   └── cache/           # Redis (futuro)
 │   ├── application/         # Casos de uso
-│   │   └── use_cases/       # Gmail, Holded, etc.
+│   │   └── use_cases/       # Gmail, Holded, Notion, WhatsApp, etc.
+│   ├── api/                 # API REST (FastAPI)
+│   │   ├── v1/              # Endpoints API v1
+│   │   │   ├── endpoints/   # Webhooks (WhatsApp, etc.)
+│   │   │   └── router.py    # Router principal
+│   │   └── api_server.py    # Servidor FastAPI
 │   └── mcp/                 # Servidor MCP
 │       ├── server.py        # Definición del servidor
-│       └── tools/           # Herramientas MCP (Gmail, Holded)
+│       └── tools/           # Herramientas MCP (Gmail, Holded, WhatsApp)
 ├── docs/                    # Documentación
 │   ├── gmail-setup.md      # Guía de configuración Gmail
-│   └── holded-integration.md # Guía de integración Holded
+│   ├── holded-integration.md # Guía de integración Holded
+│   └── whatsapp-setup.md   # Guía de configuración WhatsApp
 ├── tests/                   # Tests unitarios e integración
 ├── requirements.txt         # Dependencias
 ├── .env.example            # Ejemplo de configuración
@@ -266,29 +361,34 @@ mypy app/
 
 - [Configuración de Gmail](docs/gmail-setup.md) - Guía paso a paso para configurar Gmail OAuth2
 - [Integración con Holded](docs/holded-integration.md) - Documentación completa de la integración Holded
-- [Arquitectura](. agent/architecture.instructions.md) - Detalles de la arquitectura del proyecto
+- [Configuración de WhatsApp](docs/whatsapp-setup.md) - Guía completa para WhatsApp Business Cloud API
+- [Arquitectura](.agent/architecture.instructions.md) - Detalles de la arquitectura del proyecto
 
 ## Próximas Características
 
-- [ ] Integración con Notion
+- [x] Integración con Notion
+- [x] Integración con WhatsApp Business
+- [x] API REST con webhooks (FastAPI)
 - [ ] Integración con Google Calendar
-- [ ] Integración con WhatsApp
-- [ ] Procesamiento de documentos
-- [ ] Base de datos para persistencia
+- [ ] Procesamiento de documentos con IA
+- [ ] Base de datos para persistencia (PostgreSQL)
 - [ ] Cache con Redis
-- [ ] Task queue para operaciones asíncronas
-- [ ] API REST (FastAPI)
+- [ ] Task queue para operaciones asíncronas (Celery/ARQ)
+- [ ] Panel de administración web
 - [x] Tests unitarios e integración
 
 ## Seguridad
 
 ⚠️ **Importante**:
 - Nunca commitees `credentials.json`, archivos en `tokens/`, o tu `.env`
-- Mantén tus API keys privadas
+- Mantén tus API keys y access tokens privados
 - Los tokens de Gmail tienen acceso completo a tu cuenta
 - La API key de Holded tiene acceso a todos tus datos de negocio
+- El access token de WhatsApp tiene acceso a tu número de negocio
+- Siempre verifica la firma de los webhooks (WhatsApp)
 - Revoca acceso en [Google Account Settings](https://myaccount.google.com/permissions) si es necesario
-- Regenera tu API key de Holded si crees que ha sido comprometida
+- Regenera tus API keys si crees que han sido comprometidas
+- Usa HTTPS para todos los endpoints de webhook en producción
 
 ## Contribuir
 
@@ -308,11 +408,13 @@ Para problemas o preguntas:
 1. Revisa la documentación:
    - [Gmail Setup](docs/gmail-setup.md) para configuración de Gmail
    - [Holded Integration](docs/holded-integration.md) para configuración de Holded
+   - [WhatsApp Setup](docs/whatsapp-setup.md) para configuración de WhatsApp Business
 2. Abre un issue en GitHub
-3. Consulta la documentación de:
+3. Consulta la documentación oficial:
    - [MCP Protocol](https://modelcontextprotocol.io/)
    - [Holded API](https://developers.holded.com/)
+   - [WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api)
 
 ---
 
-Hecho con ❤️ usando [FastMCP](https://github.com/jlowin/fastmcp), [Google Gmail API](https://developers.google.com/gmail/api), y [Holded API](https://developers.holded.com/)
+Hecho con ❤️ usando [FastMCP](https://github.com/jlowin/fastmcp), [Google Gmail API](https://developers.google.com/gmail/api), [Holded API](https://developers.holded.com/), [Notion API](https://developers.notion.com/), y [WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api)

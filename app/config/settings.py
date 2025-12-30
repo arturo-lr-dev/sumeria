@@ -85,6 +85,36 @@ class Settings(BaseSettings):
         description="Notion API version"
     )
 
+    # WhatsApp Business Cloud API
+    whatsapp_access_token: Optional[str] = Field(
+        default=None,
+        description="WhatsApp Cloud API access token"
+    )
+    whatsapp_phone_number_id: Optional[str] = Field(
+        default=None,
+        description="WhatsApp Business phone number ID"
+    )
+    whatsapp_business_account_id: Optional[str] = Field(
+        default=None,
+        description="WhatsApp Business account ID"
+    )
+    whatsapp_webhook_verify_token: Optional[str] = Field(
+        default=None,
+        description="Webhook verification token for WhatsApp"
+    )
+    whatsapp_app_secret: Optional[str] = Field(
+        default=None,
+        description="App secret for webhook signature verification"
+    )
+    whatsapp_api_version: str = Field(
+        default="v21.0",
+        description="WhatsApp Cloud API version"
+    )
+    whatsapp_api_base_url: str = Field(
+        default="https://graph.facebook.com",
+        description="WhatsApp Cloud API base URL"
+    )
+
 
 # Global settings instance
 settings = Settings()
