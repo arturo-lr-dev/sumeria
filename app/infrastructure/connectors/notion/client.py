@@ -39,10 +39,6 @@ class NotionClient:
 
     # ============ Page Operations ============
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10)
-    )
     async def create_page(self, draft: NotionPageDraft) -> str:
         """
         Create a new page.
@@ -58,11 +54,25 @@ class NotionClient:
         """
         try:
             data = NotionMapper.from_page_draft(draft)
-            result = await self.client.pages.create(**data)
+
+            # Retry logic with better error handling
+            @retry(
+                stop=stop_after_attempt(3),
+                wait=wait_exponential(multiplier=1, min=2, max=10),
+                reraise=True
+            )
+            async def _create_with_retry():
+                return await self.client.pages.create(**data)
+
+            result = await _create_with_retry()
             return result["id"]
 
         except Exception as error:
-            raise Exception(f"Failed to create page: {error}")
+            # Extract meaningful error message
+            error_msg = str(error)
+            if hasattr(error, '__cause__') and error.__cause__:
+                error_msg = f"{error_msg} (caused by: {error.__cause__})"
+            raise Exception(f"Failed to create page: {error_msg}")
 
     @retry(
         stop=stop_after_attempt(3),
