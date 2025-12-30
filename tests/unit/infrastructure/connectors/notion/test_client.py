@@ -295,8 +295,8 @@ class TestNotionClient:
             parent_type="page_id"
         )
 
-        # Execute and assert - retry decorator wraps exceptions in RetryError
-        with pytest.raises(RetryError):
+        # Execute and assert
+        with pytest.raises(Exception, match="Failed to create page: API Error"):
             await notion_client.create_page(draft)
 
     def test_client_requires_api_key(self):

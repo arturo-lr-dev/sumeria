@@ -10,6 +10,7 @@ from app.config.mcp_config import mcp_config
 from app.mcp.tools.gmail_tools import gmail_tools
 from app.mcp.tools.holded_tools import holded_tools
 from app.mcp.tools.notion_tools import notion_tools
+from app.mcp.tools.whatsapp_tools import whatsapp_tools
 
 
 # Initialize MCP server
@@ -642,6 +643,147 @@ async def notion_get_page_content(
     )
 
 
+# ============ WhatsApp Tools ============
+
+@mcp.tool()
+async def whatsapp_send_text(
+    to: str,
+    text: str,
+    preview_url: bool = False
+):
+    """
+    Send a WhatsApp text message.
+
+    The recipient phone number must be in E.164 format (with country code).
+    Example: +14155552671 for a US number.
+
+    Text can be up to 4096 characters.
+    Set preview_url=True to show link previews for URLs in the message.
+    """
+    return await whatsapp_tools().send_text_message(
+        to=to,
+        text=text,
+        preview_url=preview_url
+    )
+
+
+@mcp.tool()
+async def whatsapp_send_image(
+    to: str,
+    image_url: str = None,
+    image_path: str = None,
+    caption: str = None
+):
+    """
+    Send an image via WhatsApp.
+
+    Provide EITHER image_url (publicly accessible URL) OR image_path (local file).
+    Do not provide both.
+
+    Supported formats: JPG, PNG
+    Maximum size: 5MB
+    Caption max: 1024 characters
+
+    Phone number must be in E.164 format (+14155552671).
+    """
+    return await whatsapp_tools().send_image(
+        to=to,
+        image_url=image_url,
+        image_path=image_path,
+        caption=caption
+    )
+
+
+@mcp.tool()
+async def whatsapp_send_document(
+    to: str,
+    document_url: str = None,
+    document_path: str = None,
+    filename: str = None,
+    caption: str = None
+):
+    """
+    Send a document via WhatsApp.
+
+    Provide EITHER document_url OR document_path.
+
+    Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, and more
+    Maximum size: 100MB
+    Caption max: 1024 characters
+
+    The filename will be displayed in WhatsApp.
+    Phone number must be in E.164 format.
+    """
+    return await whatsapp_tools().send_document(
+        to=to,
+        document_url=document_url,
+        document_path=document_path,
+        filename=filename,
+        caption=caption
+    )
+
+
+@mcp.tool()
+async def whatsapp_send_template(
+    to: str,
+    template_name: str,
+    language: str = "en_US",
+    parameters: list[str] = None
+):
+    """
+    Send a pre-approved WhatsApp template message.
+
+    Templates must be approved by Meta before they can be used.
+    Use whatsapp_list_templates to see available templates.
+
+    Parameters must match the template structure (e.g., ["John", "123"]).
+    Language codes: en_US, es_ES, pt_BR, etc.
+
+    Phone number must be in E.164 format.
+    """
+    return await whatsapp_tools().send_template(
+        to=to,
+        template_name=template_name,
+        language=language,
+        parameters=parameters or []
+    )
+
+
+@mcp.tool()
+async def whatsapp_list_templates(status_filter: str = None):
+    """
+    List all WhatsApp message templates.
+
+    Status filter options: APPROVED, PENDING, REJECTED
+    Leave empty to see all templates.
+
+    Only APPROVED templates can be used to send messages.
+    Templates must be created and approved in Meta Business Manager.
+    """
+    return await whatsapp_tools().list_templates(status_filter=status_filter)
+
+
+@mcp.tool()
+async def whatsapp_download_media(
+    media_id: str,
+    save_path: str = None
+):
+    """
+    Download media from a WhatsApp message.
+
+    Media ID is provided in incoming webhook messages.
+    If save_path is provided, file will be saved locally.
+    Otherwise, returns media data for processing.
+
+    Useful for downloading images, videos, documents, or audio
+    received in WhatsApp messages.
+    """
+    return await whatsapp_tools().download_media(
+        media_id=media_id,
+        save_path=save_path
+    )
+
+
 # Add a prompt for common email workflows
 @mcp.prompt()
 def email_assistant():
@@ -701,6 +843,27 @@ def notion_assistant():
             "- Organizing your workspace with parent-child page hierarchies\n"
             "- Working with page properties and metadata\n\n"
             "What would you like to do with your Notion workspace?"
+        )
+    ]
+
+
+@mcp.prompt()
+def whatsapp_assistant():
+    """Helpful WhatsApp Business assistant prompt."""
+    from mcp.server.fastmcp.prompts import base
+
+    return [
+        base.UserMessage(
+            "You are a helpful WhatsApp Business assistant. "
+            "I can help you with:\n"
+            "- Sending text messages to customers (phone numbers in E.164 format: +1234567890)\n"
+            "- Sending images, documents, and other media\n"
+            "- Using pre-approved message templates for notifications\n"
+            "- Listing available message templates\n"
+            "- Downloading media from incoming messages\n"
+            "- All phone numbers must be in E.164 format (+country code + number)\n"
+            "- Templates must be created and approved in Meta Business Manager before use\n\n"
+            "What would you like to do with WhatsApp?"
         )
     ]
 
