@@ -11,6 +11,7 @@ from app.mcp.tools.gmail_tools import gmail_tools
 from app.mcp.tools.holded_tools import holded_tools
 from app.mcp.tools.notion_tools import notion_tools
 from app.mcp.tools.whatsapp_tools import whatsapp_tools
+from app.mcp.tools.calendar_tools import calendar_tools
 
 
 # Initialize MCP server
@@ -784,6 +785,110 @@ async def whatsapp_download_media(
     )
 
 
+# ============ Calendar Tools ============
+
+@mcp.tool()
+async def calendar_create_event(
+    summary: str,
+    start_datetime: str = None,
+    start_date: str = None,
+    end_datetime: str = None,
+    end_date: str = None,
+    description: str = None,
+    location: str = None,
+    attendees: list[str] = None,
+    reminders_minutes: list[int] = None,
+    calendar_id: str = "primary",
+    provider: str = "google",
+    account_id: str = None
+):
+    """
+    Create a new calendar event.
+
+    Supports both Google Calendar and Apple Calendar.
+    Use start_datetime/end_datetime for timed events (ISO format: 2026-01-15T10:00:00).
+    Use start_date/end_date for all-day events (format: 2026-01-15).
+
+    Provider options: google, apple
+    Calendar ID: 'primary' or specific calendar ID
+
+    Example timed event:
+    - start_datetime: "2026-01-15T10:00:00"
+    - end_datetime: "2026-01-15T11:00:00"
+
+    Example all-day event:
+    - start_date: "2026-01-15"
+    - end_date: "2026-01-16"
+    """
+    return await calendar_tools.create_event(
+        summary=summary,
+        start_datetime=start_datetime,
+        start_date=start_date,
+        end_datetime=end_datetime,
+        end_date=end_date,
+        description=description,
+        location=location,
+        attendees=attendees,
+        reminders_minutes=reminders_minutes,
+        calendar_id=calendar_id,
+        provider=provider,
+        account_id=account_id
+    )
+
+
+@mcp.tool()
+async def calendar_list_events(
+    calendar_id: str = "primary",
+    time_min: str = None,
+    time_max: str = None,
+    query: str = None,
+    max_results: int = 10,
+    provider: str = "google",
+    account_id: str = None
+):
+    """
+    List calendar events.
+
+    Filter by time range, search query, or both.
+    Time format: ISO 8601 (2026-01-15T10:00:00)
+
+    Examples:
+    - List today's events: time_min="2026-01-15T00:00:00", time_max="2026-01-15T23:59:59"
+    - Search events: query="meeting"
+    - Next week's events: time_min="2026-01-15T00:00:00", time_max="2026-01-22T23:59:59"
+
+    Provider options: google, apple
+    """
+    return await calendar_tools.list_events(
+        calendar_id=calendar_id,
+        time_min=time_min,
+        time_max=time_max,
+        query=query,
+        max_results=max_results,
+        provider=provider,
+        account_id=account_id
+    )
+
+
+@mcp.tool()
+async def calendar_list_calendars(
+    provider: str = "google",
+    account_id: str = None
+):
+    """
+    List all available calendars.
+
+    Shows calendars from Google or Apple depending on provider.
+    Useful for finding calendar IDs to use in other calendar operations.
+
+    Provider options: google, apple
+    """
+    return await calendar_tools.list_calendars(
+        provider=provider,
+        account_id=account_id
+    )
+
+
 # Add a prompt for common email workflows
 @mcp.prompt()
 def email_assistant():
@@ -864,6 +969,28 @@ def whatsapp_assistant():
             "- All phone numbers must be in E.164 format (+country code + number)\n"
             "- Templates must be created and approved in Meta Business Manager before use\n\n"
             "What would you like to do with WhatsApp?"
+        )
+    ]
+
+
+@mcp.prompt()
+def calendar_assistant():
+    """Helpful calendar management assistant prompt."""
+    from mcp.server.fastmcp.prompts import base
+
+    return [
+        base.UserMessage(
+            "You are a helpful calendar management assistant supporting both Google Calendar and Apple Calendar. "
+            "I can help you with:\n"
+            "- Creating events with attendees and reminders\n"
+            "- Listing and searching events by date range or keywords\n"
+            "- Managing multiple calendars\n"
+            "- Working with both timed events and all-day events\n"
+            "- Supporting both Google Calendar (OAuth) and Apple Calendar (CalDAV)\n\n"
+            "Time formats:\n"
+            "- Timed events: ISO 8601 (2026-01-15T10:00:00)\n"
+            "- All-day events: YYYY-MM-DD (2026-01-15)\n\n"
+            "What would you like to do with your calendar?"
         )
     ]
 
