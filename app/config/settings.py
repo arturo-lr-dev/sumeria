@@ -115,6 +115,45 @@ class Settings(BaseSettings):
         description="WhatsApp Cloud API base URL"
     )
 
+    # Google Calendar - Multi-account support
+    google_calendar_credentials_file: Optional[Path] = Field(
+        default=None,
+        description="Path to Google Calendar OAuth2 credentials JSON file"
+    )
+    google_calendar_tokens_dir: Path = Field(
+        default=Path("tokens/google_calendar"),
+        description="Directory to store Google Calendar OAuth2 tokens for multiple accounts"
+    )
+    google_calendar_scopes: list[str] = Field(
+        default=[
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/calendar.events",
+        ],
+        description="Google Calendar API scopes"
+    )
+    google_calendar_default_account: Optional[str] = Field(
+        default=None,
+        description="Default Google Calendar account identifier (email or alias)"
+    )
+
+    # Apple Calendar (CalDAV)
+    apple_calendar_url: Optional[str] = Field(
+        default=None,
+        description="Apple Calendar CalDAV URL (e.g., https://caldav.icloud.com)"
+    )
+    apple_calendar_username: Optional[str] = Field(
+        default=None,
+        description="Apple ID for CalDAV access"
+    )
+    apple_calendar_password: Optional[str] = Field(
+        default=None,
+        description="App-specific password for CalDAV"
+    )
+    apple_calendar_tokens_dir: Path = Field(
+        default=Path("tokens/apple_calendar"),
+        description="Directory to store Apple Calendar credentials"
+    )
+
 
 # Global settings instance
 settings = Settings()
