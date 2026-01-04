@@ -122,7 +122,7 @@ class TestGoogleCalendarClient:
         mock_build.assert_called_once_with('calendar', 'v3', credentials=mock_oauth_handler.get_credentials())
 
     @pytest.mark.asyncio
-    @patch('app.infrastructure.connectors.google_calendar.client.GoogleCalendarMapper')
+    @patch('app.infrastructure.connectors.google_calendar.schemas.GoogleCalendarMapper')
     async def test_create_event_success(self, mock_mapper, google_calendar_client, mock_service, sample_event_draft):
         """Test successful event creation."""
         google_calendar_client._service = mock_service
@@ -155,7 +155,7 @@ class TestGoogleCalendarClient:
             await google_calendar_client.create_event('primary', sample_event_draft)
 
     @pytest.mark.asyncio
-    @patch('app.infrastructure.connectors.google_calendar.client.GoogleCalendarMapper')
+    @patch('app.infrastructure.connectors.google_calendar.schemas.GoogleCalendarMapper')
     async def test_get_event_success(self, mock_mapper, google_calendar_client, mock_service, sample_api_event):
         """Test successful event retrieval."""
         google_calendar_client._service = mock_service
@@ -178,7 +178,7 @@ class TestGoogleCalendarClient:
         )
 
     @pytest.mark.asyncio
-    @patch('app.infrastructure.connectors.google_calendar.client.GoogleCalendarMapper')
+    @patch('app.infrastructure.connectors.google_calendar.schemas.GoogleCalendarMapper')
     async def test_list_events_success(self, mock_mapper, google_calendar_client, mock_service, sample_api_event):
         """Test successful event listing."""
         google_calendar_client._service = mock_service
@@ -239,7 +239,7 @@ class TestGoogleCalendarClient:
         )
 
     @pytest.mark.asyncio
-    @patch('app.infrastructure.connectors.google_calendar.client.GoogleCalendarMapper')
+    @patch('app.infrastructure.connectors.google_calendar.schemas.GoogleCalendarMapper')
     async def test_list_calendars_success(self, mock_mapper, google_calendar_client, mock_service, sample_api_calendar):
         """Test successful calendar listing."""
         google_calendar_client._service = mock_service

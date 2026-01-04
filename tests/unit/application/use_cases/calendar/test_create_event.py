@@ -51,7 +51,7 @@ class TestCreateEventUseCase:
     """Test suite for CreateEventUseCase."""
 
     @pytest.mark.asyncio
-    @patch('app.application.use_cases.calendar.create_event.google_calendar_account_manager')
+    @patch('app.infrastructure.connectors.google_calendar.account_manager.google_calendar_account_manager')
     async def test_create_google_event_success(self, mock_manager, create_event_use_case, google_request):
         """Test successful event creation in Google Calendar."""
         # Mock client
@@ -75,7 +75,7 @@ class TestCreateEventUseCase:
         mock_client.get_event.assert_called_once_with("primary", "event123")
 
     @pytest.mark.asyncio
-    @patch('app.application.use_cases.calendar.create_event.AppleCalendarClient')
+    @patch('app.infrastructure.connectors.apple_calendar.client.AppleCalendarClient')
     async def test_create_apple_event_success(self, mock_client_class, create_event_use_case, apple_request):
         """Test successful event creation in Apple Calendar."""
         # Mock client
@@ -97,7 +97,7 @@ class TestCreateEventUseCase:
         mock_client.create_event.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch('app.application.use_cases.calendar.create_event.google_calendar_account_manager')
+    @patch('app.infrastructure.connectors.google_calendar.account_manager.google_calendar_account_manager')
     async def test_create_event_failure(self, mock_manager, create_event_use_case, google_request):
         """Test event creation failure."""
         # Mock client to raise error
@@ -112,7 +112,7 @@ class TestCreateEventUseCase:
         assert response.error == "API Error"
 
     @pytest.mark.asyncio
-    @patch('app.application.use_cases.calendar.create_event.google_calendar_account_manager')
+    @patch('app.infrastructure.connectors.google_calendar.account_manager.google_calendar_account_manager')
     async def test_create_event_all_day(self, mock_manager, create_event_use_case):
         """Test creating all-day event."""
         request = CreateEventRequest(
@@ -143,7 +143,7 @@ class TestCreateEventUseCase:
         assert draft.end.date == "2026-01-16"
 
     @pytest.mark.asyncio
-    @patch('app.application.use_cases.calendar.create_event.google_calendar_account_manager')
+    @patch('app.infrastructure.connectors.google_calendar.account_manager.google_calendar_account_manager')
     async def test_create_event_with_attendees(self, mock_manager, create_event_use_case):
         """Test creating event with multiple attendees."""
         request = CreateEventRequest(
@@ -175,7 +175,7 @@ class TestCreateEventUseCase:
         assert draft.attendees[2].email == "charlie@example.com"
 
     @pytest.mark.asyncio
-    @patch('app.application.use_cases.calendar.create_event.google_calendar_account_manager')
+    @patch('app.infrastructure.connectors.google_calendar.account_manager.google_calendar_account_manager')
     async def test_create_event_with_multiple_reminders(self, mock_manager, create_event_use_case):
         """Test creating event with multiple reminders."""
         request = CreateEventRequest(
